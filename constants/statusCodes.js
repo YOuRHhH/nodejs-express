@@ -1,0 +1,17 @@
+module.exports = {
+  // HTTP 状态码
+  HTTP_OK: 200,
+  HTTP_CREATED: 201,
+  HTTP_BAD_REQUEST: 400,
+  HTTP_UNAUTHORIZED: 401,
+  HTTP_FORBIDDEN: 403,
+  HTTP_NOT_FOUND: 404,
+  HTTP_INTERNAL_SERVER_ERROR: 500,
+  
+  // 自定义业务错误码
+  HTTP_ERROR: 1001, // 正常业务逻辑错误
+  HTTP_NOT_LOGIN: 1002, // 未登录 / 认证失败
+  HTTP_INVALID_TOKEN: 1003,  // 令牌失效
+  HTTP_NOT_PERMISSION: 1004, // 无权限
+  HTTP_LOGIN_FAIL_OVER: 1005, // 登录失败次数超限
+};
