@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var middleware = require('../../middleware/web.middleware');
+var middleware = require('../../middleware/router/web.middleware');
 var {success,error}  = require('../../utils/responseHelper')
 
 router.use(middleware)

@@ -3,6 +3,7 @@ const statusCodes = require('../constants/statusCodes');
 
 const {decryptJWT} = require('../utils/index');
 
+// 白名单
 const whiteList = [
   '/api/admin/captcha',
   '/api/admin/login'
@@ -18,10 +19,9 @@ module.exports = function (req, res, next) {
   try {
     const decoded = decryptJWT(token)
     req.user = decoded;
-    next();
+    return next();
   } catch (err) {
     responseHelper.error(res, statusCodes.HTTP_INVALID_TOKEN, '无效的令牌，请重新登录')
   }
-  next()
 }
 

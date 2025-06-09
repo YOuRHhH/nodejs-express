@@ -7,6 +7,7 @@ CREATE TABLE backend_users (
   platform ENUM('admin', 'business') NOT NULL DEFAULT 'business' COMMENT '平台类型，如 admin、business',
   email VARCHAR(255),
   status ENUM('1', '0') DEFAULT '0' COMMENT '状态，如 1:active、0:inactive',
+  type ENUM('business', 'admin') NOT NULL COMMENT '用户类型，如 business、admin',
   first_name VARCHAR(255),
   last_name VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -14,9 +15,9 @@ CREATE TABLE backend_users (
   deleted_at TIMESTAMP DEFAULT NULL
 )COMMENT '后台用户表';
 -- 插入数据
-INSERT INTO backend_users (username, password, email, first_name, last_name) VALUES
- ('admin', '123123', 'admin@example.com', 'Admin', 'User'),
- ('editor', '123123', 'editor@example.com', 'Editor', 'User'); 
+INSERT INTO backend_users (username, password, email, type, first_name, last_name) VALUES
+ ('admin', '123123', 'admin@example.com', 'admin', 'Admin', 'User'),
+ ('editor', '123123', 'editor@example.com', 'admin', 'Editor', 'User'); 
 
 -- 菜单表
 CREATE TABLE menus (

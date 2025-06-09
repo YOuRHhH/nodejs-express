@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var adminMiddleware = require('../../middleware/admin.middleware');
+var adminMiddleware = require('../../middleware/router/admin.middleware');
 var validateParamMiddleware  = require('../../middleware/validate.middleware');
 
 
@@ -12,6 +12,7 @@ router.use(adminMiddleware)
 
 router.post('/login',[validateParamMiddleware(loginValidator.adminLogin)], loginController.adminLogin);
 router.post('/captcha', captchaController.getCaptcha)
+router.post('/logout', loginController.adminLogout);
 
 
 module.exports = router;

@@ -76,3 +76,7 @@ exports.adminLogin = async (req, res, next) => {
     return responseHelper.error(res, statusCodes.HTTP_ERROR, '用户数据加载失败: ' + err.message);
   }
 };
+
+exports.adminLogout = async (req, res, next) => {
+  responseHelper.success(res, {}, 'test')
+}

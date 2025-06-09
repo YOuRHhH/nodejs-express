@@ -12,29 +12,30 @@ module.exports = function (req, res, next) {
   const logFile = path.join(LOG_DIR, `${dateStr}.log`);
   // 拦截 res.send
   res.send = function (body) {
-    const duration = Date.now() - start;
-    if(!skipRecordUrl.includes(req.originalUrl)){
-      const log = [
-        `[${signDate}]`,
-        `${req.method} ${req.originalUrl}`,
-        `URL: ${req.originalUrl}`,
-        `IP: ${req.ip}`,
-        `duration: ${duration}ms`,
-        `body: ${JSON.stringify(req.body)}`,
-        `response: ${body}`,
-      ].join(' - ') + '\n';
-      if (!fs.existsSync(LOG_DIR)) {
-        fs.mkdirSync(LOG_DIR, { recursive: true });
+    try{
+      const duration = Date.now() - start;
+      if(!skipRecordUrl.includes(req.originalUrl)){
+        const log = [
+          `[${signDate}]`,
+          `${req.method} ${req.originalUrl}`,
+          `URL: ${req.originalUrl}`,
+          `IP: ${req.ip}`,
+          `duration: ${duration}ms`,
+          `body: ${JSON.stringify(req.body)}`,
+          `response: ${body}`,
+        ].join(' - ') + '\n';
+        if (!fs.existsSync(LOG_DIR)) {
+          fs.mkdirSync(LOG_DIR, { recursive: true });
+        }
+    
+        fs.appendFile(logFile, log, (err) => {
+          if (err) console.error('写日志失败:', err);
+        });
       }
-  
-      fs.appendFile(logFile, log, (err) => {
-        if (err) console.error('写日志失败:', err);
-      });
+      return originalSend.call(this, body);
+    }catch(e){
+      console.error(e)
     }
-
-    // 恢复原始 send 方法
-    return originalSend.call(this, body);
   };
-
   next();
 };

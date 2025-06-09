@@ -7,10 +7,8 @@ const responseMiddleware = require('./response.middleware.js');
  * @date: 2025-05-30
  */
 module.exports = function (app) { 
-  // console.log('init middleware')
   
   app.use(jwtMiddleware)
   app.use(requestMiddleware);
-
   app.use(responseMiddleware);
 }
