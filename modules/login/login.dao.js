@@ -2,7 +2,7 @@ const db = require('../../utils/mysql');
 
 
 exports.adminLogin = async (param) => {
-  const sql = 'SELECT id,username,status,type,email,first_name,last_name FROM backend_users WHERE username = ? AND password = ?';
+  const sql = 'SELECT id,username,type,status,email,first_name,last_name FROM backend_users WHERE username = ? AND password = ?';
   const [rows] = await db.query(sql, [param.account, param.password]);
   return rows;
 };

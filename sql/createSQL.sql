@@ -1,5 +1,32 @@
 -- 创建后台用户表
-DROP TABLE IF EXISTS user_role,roles,role_menu,menus,backend_users;
+DROP TABLE IF EXISTS 
+user_role,
+roles,
+role_menu,
+menus,
+backend_users,
+coupons,
+members,
+members_finance,
+members_financials,
+member_address,
+categories,
+product_skus,
+product_images,
+product_specs,
+product_categories,
+product_tags,
+products,
+tenants,
+platform_finance,
+platform_financials,
+tenants_finance,
+tenants_financials,
+tenants_enterprise_info,
+orders,
+order_items,
+tags
+;
 CREATE TABLE backend_users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(255) NOT NULL UNIQUE,
@@ -7,18 +34,19 @@ CREATE TABLE backend_users (
   platform ENUM('admin', 'business') NOT NULL DEFAULT 'business' COMMENT '平台类型，如 admin、business',
   email VARCHAR(255),
   status ENUM('1', '0') DEFAULT '0' COMMENT '状态，如 1:active、0:inactive',
+  type ENUM('admin', 'business') DEFAULT 'business' COMMENT '用户类型，如 admin、business',
   -- 是否为子账户
   sub_account ENUM('1', '0') DEFAULT '0' COMMENT '是否为子账户，如 1:yes、0:no',
   first_name VARCHAR(255),
   last_name VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP DEFAULT NULL COMMENT '软删除字段',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME DEFAULT NULL COMMENT '软删除字段'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '后台用户表';
 -- 插入数据
-INSERT INTO backend_users (username, password, email, first_name, last_name) VALUES
- ('admin', '123123', 'admin@example.com', 'Admin', 'User'),
- ('editor', '123123', 'editor@example.com', 'Editor', 'User'); 
+INSERT INTO backend_users (username, password, email, type, first_name, last_name) VALUES
+ ('admin', '123123', 'admin@example.com', 'admin', 'Admin', 'User'),
+ ('editor', '123123', 'editor@example.com', 'admin', 'Editor', 'User'); 
 
 -- 菜单表
 CREATE TABLE menus (
@@ -32,9 +60,9 @@ CREATE TABLE menus (
   parent_id INT DEFAULT NULL COMMENT '父菜单ID',
   sort INT DEFAULT 0,
   visible BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP DEFAULT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME DEFAULT NULL,
   FOREIGN KEY (parent_id) REFERENCES menus(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '菜单表';
 -- 插入数据
@@ -145,8 +173,8 @@ CREATE TABLE roles (
   name VARCHAR(50) NOT NULL COMMENT '角色名称',
   code VARCHAR(50) NOT NULL UNIQUE COMMENT '角色编码，如 admin、editor',
   description VARCHAR(255) DEFAULT NULL COMMENT '描述',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP DEFAULT NULL
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  deleted_at DATETIME DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '角色表';
 -- 插入数据
 INSERT INTO roles (id, name, code, description) VALUES
@@ -157,9 +185,9 @@ INSERT INTO roles (id, name, code, description) VALUES
 CREATE TABLE user_role (
   user_id INT NOT NULL,
   role_id INT NOT NULL,
-  deleted_at TIMESTAMP DEFAULT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME DEFAULT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, role_id),
   FOREIGN KEY (user_id) REFERENCES backend_users(id) ON DELETE CASCADE,
   FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
@@ -303,10 +331,10 @@ CREATE TABLE members (
   PRIMARY KEY (id),
   UNIQUE KEY uniq_username (username, platform),
   UNIQUE KEY uniq_phone (phone),
-  UNIQUE KEY uniq_email (email)
+  UNIQUE KEY uniq_email (email),
   KEY idx_tenant_id (tenant_id),
   KEY idx_open_id (open_id),
-  KEY idx_status (status),
+  KEY idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='会员表';
 -- 会员财务表
 CREATE TABLE members_finance (
@@ -322,6 +350,7 @@ CREATE TABLE members_finance (
   frozen_balance DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '冻结余额',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id),
   FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='会员财务表';
 -- 会员财务流水表
@@ -334,6 +363,7 @@ CREATE TABLE members_financials (
   balance DECIMAL(10,2) NOT NULL COMMENT '余额',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='会员财务表';
 -- 会员地址表
 CREATE TABLE member_address (
@@ -364,17 +394,38 @@ CREATE TABLE tags (
   description TEXT DEFAULT NULL COMMENT '标签描述',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标签表';
+-- 分类表
+CREATE TABLE categories (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  name VARCHAR(50) NOT NULL COMMENT '分类名称',
+  description TEXT DEFAULT NULL COMMENT '分类描述',
+  status TINYINT DEFAULT 1 COMMENT '状态：1正常 0禁用',
+  img_url VARCHAR(255) DEFAULT NULL COMMENT '分类图片URL',
+  is_show_index TINYINT DEFAULT 0 COMMENT '是否首页展示（1是 0否）',
+  sort INT DEFAULT 0 COMMENT '排序字段',
+  type ENUM('business', 'member') DEFAULT 'member' COMMENT '所属平台：business/member member用户端展示 business商家展示',
+  operate_user_name VARCHAR(50) DEFAULT NULL COMMENT '操作者名称',
+  operate_user_id BIGINT UNSIGNED DEFAULT NULL COMMENT '操作者ID',
+  parent_id BIGINT UNSIGNED DEFAULT NULL COMMENT '父级分类ID',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_parent_id (parent_id),
+  FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分类表';
 
 -- 商品表
 CREATE TABLE products (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   tenant_id BIGINT UNSIGNED DEFAULT NULL COMMENT '租户ID',
   platform VARCHAR(50) NOT NULL DEFAULT 'admin' COMMENT '所属平台：admin/business/member',
-  category_id BIGINT UNSIGNED DEFAULT NULL COMMENT '商品分类ID',
+  category_id BIGINT UNSIGNED DEFAULT NULL COMMENT '商品分类ID,为最后一层id',
   name VARCHAR(255) NOT NULL COMMENT '商品名称',
   spu VARCHAR(100) DEFAULT NULL COMMENT '商品SPU编号',
   price DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '参考价格（最低价）',
+  sale decimal(10,2) DEFAULT NULL COMMENT '价格原价（划横线）',
   stock INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '总库存',
   status TINYINT(1) NOT NULL DEFAULT 1 COMMENT '状态(1启用，0禁用)',
   cover_img VARCHAR(500) DEFAULT NULL COMMENT '封面图URL',
@@ -390,6 +441,26 @@ CREATE TABLE products (
   KEY idx_status (status),
   KEY idx_deleted_at (deleted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品表';
+-- 商品分类表
+CREATE TABLE product_categories (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  tenant_id BIGINT UNSIGNED DEFAULT NULL COMMENT '租户ID',
+  product_name VARCHAR(100) NOT NULL COMMENT '商品名称',
+  product_cover_img VARCHAR(500) DEFAULT NULL COMMENT '商品封面图URL',
+  sale decimal(10,2) DEFAULT NULL COMMENT '价格原价（划横线）',
+  price DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '参考价格（最低价）',
+  parent_id BIGINT UNSIGNED DEFAULT NULL COMMENT '父级分类ID',
+
+
+  sort INT NOT NULL DEFAULT 0 COMMENT '排序值',
+  deleted_at DATETIME DEFAULT NULL COMMENT '软删除',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_tenant_name (tenant_id, product_name),
+  KEY idx_parent_id (parent_id),
+  KEY idx_deleted_at (deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品分类表';
 -- 商品tag表
 CREATE TABLE product_tags (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
@@ -398,30 +469,16 @@ CREATE TABLE product_tags (
   PRIMARY KEY (id),
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
   FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
-)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品tag表';
 
--- 商品分类表
-CREATE TABLE product_categories (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  tenant_id BIGINT UNSIGNED DEFAULT NULL COMMENT '租户ID',
-  name VARCHAR(100) NOT NULL COMMENT '分类名称',
-  parent_id BIGINT UNSIGNED DEFAULT NULL COMMENT '父级分类ID',
-  sort INT NOT NULL DEFAULT 0 COMMENT '排序值',
-  deleted_at DATETIME DEFAULT NULL COMMENT '软删除',
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (id),
-  UNIQUE KEY uniq_tenant_name (tenant_id, name),
-  KEY idx_parent_id (parent_id),
-  KEY idx_deleted_at (deleted_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品分类表';
+
 
 -- 商品图片/视频表
 CREATE TABLE product_images (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   product_id BIGINT UNSIGNED NOT NULL COMMENT '所属商品ID',
   img_url VARCHAR(500) DEFAULT NULL COMMENT '图片链接',
-  video_url VARCHAR(500) DEFAULT NULL COMMENT `视频链接`,
+  video_url VARCHAR(500) DEFAULT NULL COMMENT '视频链接',
   is_video TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否为视频（0否，1是）',
   sort INT NOT NULL DEFAULT 0 COMMENT '排序',
   PRIMARY KEY (id),
@@ -459,7 +516,7 @@ CREATE TABLE product_skus (
 
 -- 创建商户信息表
 CREATE TABLE tenants (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   backend_users_id INT NOT NULL COMMENT '关联后台用户ID',
   business_name VARCHAR(255) NOT NULL COMMENT '店铺名称',
   customer_service_phone VARCHAR(20) NOT NULL COMMENT '店铺客服电话',
@@ -479,9 +536,9 @@ CREATE TABLE tenants (
   latitude DECIMAL(9,6) DEFAULT NULL COMMENT '纬度',
   longitude DECIMAL(9,6) DEFAULT NULL COMMENT '经度',
   status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending' COMMENT '商户状态',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP DEFAULT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME DEFAULT NULL,
   FOREIGN KEY (backend_users_id) REFERENCES backend_users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商户信息表';
 -- 创建平台端财务表
@@ -500,10 +557,10 @@ CREATE TABLE platform_financials (
   remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
   amount DECIMAL(10,2) NOT NULL COMMENT '金额',
   type TINYINT DEFAULT NULL COMMENT '类型（1收入 2支出）',
-  tenants_id BIGINT UNSIGNED DEFAULT NULL COMMENT '商户ID',
-  tenants_financials_id BIGINT UNSIGNED DEFAULT NULL COMMENT '商户财务流水ID',
+  tenant_id BIGINT UNSIGNED DEFAULT NULL COMMENT '商户ID',
+  tenant_financials_id BIGINT UNSIGNED DEFAULT NULL COMMENT '商户财务流水ID',
   operate_user_name VARCHAR(64) DEFAULT NULL COMMENT '操作人名称',
-  tenants_operate_user_name VARCHAR(64) DEFAULT NULL COMMENT '商户操作人名称',
+  tenant_operate_user_name VARCHAR(64) DEFAULT NULL COMMENT '商户操作人名称',
   bank_name VARCHAR(64) DEFAULT NULL COMMENT '银行名称',
   bank_account VARCHAR(64) DEFAULT NULL COMMENT '银行账号',
   status TINYINT NOT NULL DEFAULT 0 COMMENT '状态（0待处理 10打款成功 20打款失败 30撤销 40拒绝）',
@@ -524,7 +581,8 @@ CREATE TABLE tenants_finance (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (id),
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE COMMENT '关联商户表'
+  KEY idx_tenant_id (tenant_id),
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商户财务表';
 -- 创建商户财务表明细
 CREATE TABLE tenants_financials (
@@ -562,9 +620,10 @@ CREATE TABLE tenants_enterprise_info (
   legal_idcard VARCHAR(100) NOT NULL COMMENT '法人身份证号',
   legal_idcard_front VARCHAR(500) NOT NULL COMMENT '法人身份证正面',
   legal_idcard_back VARCHAR(500) NOT NULL COMMENT '法人身份证反面',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP DEFAULT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME DEFAULT NULL,
+  PRIMARY KEY (id),
   FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商户企业信息表';
 
@@ -598,7 +657,7 @@ CREATE TABLE orders (
   UNIQUE KEY `uniq_order_no` (`order_no`),
   KEY `idx_user_id` (`user_id`),
   KEY `idx_tenant_id` (`tenant_id`),
-  KEY `idx_status` (`status`)
+  KEY `idx_status` (`status`),
   KEY idx_tenant_status (tenant_id, status),
   KEY idx_tenant_user (tenant_id, user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单表';
@@ -607,13 +666,13 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   order_id BIGINT UNSIGNED NOT NULL COMMENT '订单ID',
-  product_id BIGINT UNSIGNED NOT NULL COMMENT '商品ID',
+  product_id BIGINT UNSIGNED DEFAULT NULL COMMENT '商品ID',
   sku_id BIGINT UNSIGNED DEFAULT NULL COMMENT 'SKU ID',
   quantity INT NOT NULL DEFAULT 1 COMMENT '购买数量',
   price DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '单价',
   total_price DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '总价 = price * quantity',
   product_name VARCHAR(255) NOT NULL COMMENT '商品名称快照',
-  product_cover VARCHAR(255) DEFAULT NULL COMMENT '商品封面图快照'
+  product_cover VARCHAR(255) DEFAULT NULL COMMENT '商品封面图快照',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (id),

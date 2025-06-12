@@ -67,6 +67,7 @@ exports.adminLogin = async (req, res, next) => {
       token
     }
     const setData = {
+      token,
       user,
       code:menuPermission
     }
